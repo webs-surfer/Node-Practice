@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Card Grid — Animated Layout</title>
+  <style>
+    :root{
+      --bg:#0f1724;         /* deep navy */
+      --card:#0b1220;
+      --muted:#9aa6b2;
+      --accent:#6ee7b7;     /* mint */
+      --glass: rgba(255,255,255,0.03);
+      --radius:16px;
+      --elev: 0 10px 30px rgba(2,6,23,0.6);
+      --max-width:1200px;
+      --gap:1.25rem;
+      --card-aspect: 56.25%; /* 16:9*/
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    * { box-sizing: border-box; }
+    html,body { height:100%; margin:0; background: linear-gradient(180deg,var(--bg), #071021 140%); color: #e6eef6; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+    .page {
+      max-width: var(--max-width);
+      margin: 48px auto;
+      padding: 24px;
+    }
+
+    header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; }
+    .title {
+      font-size:1.25rem;
+      letter-spacing:0.02em;
+      color:var(--muted);
+    }
+    h1 { margin:0; font-size:clamp(1.5rem, 2.6vw, 2.1rem); }
+
+    /* grid */
+    .grid {
+      display:grid;
+      gap: var(--gap);
+      grid-template-columns: repeat(1, 1fr);
+    }
+    @media (min-width:640px){ .grid { grid-template-columns: repeat(2, 1fr);} }
+    @media (min-width:1024px){ .grid { grid-template-columns: repeat(3, 1fr);} }
+
+    /* card */
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--elev);
+      transition: transform 380ms cubic-bezier(.2,.9,.2,1), box-shadow 380ms, border-radius 220ms;
+      transform-origin: center;
+      border: 1px solid rgba(255,255,255,0.03);
+      display:flex;
+      flex-direction:column;
+      will-change: transform;
+    }
+
+    .card:focus-within,
+    .card:hover {
+      transform: translateY(-10px) scale(1.01);
+      box-shadow: 0 18px 50px rgba(2,6,23,0.75);
+      border-radius: 20px;
+    }
+
+    .media {
+      position:relative;
+      width:100%;
+      padding-top: var(--card-aspect);
+      overflow:hidden;
+      background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    }
+
+    .media img {
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      transform: scale(1.07);
+      transition: transform 600ms cubic-bezier(.2,.9,.2,1);
+      -webkit-backface-visibility:hidden;
+      backface-visibility:hidden;
+    }
+
+    .card:hover img,
+    .card:focus-within img {
+      transform: scale(1.0) translateY(-4px) rotateZ(-0.5deg);
+    }
+
+    .card-content {
+      padding: 18px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .kicker {
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      background:var(--glass);
+      color:var(--accent);
+      font-weight:600;
+      font-size:0.78rem;
+      border:1px solid rgba(110,231,183,0.06);
+      width:fit-content;
+    }
+
+    .card-title {
+      margin:0;
+      font-size:1.05rem;
+      line-height:1.15;
+      letter-spacing:-0.01em;
+    }
+
+    .card-desc {
+      margin:0;
+      color:var(--muted);
+      font-size:0.94rem;
+      line-height:1.45;
+    }
+
+    .meta {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-top:auto;
+    }
+
+    .tags {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .tag {
+      background: rgba(255,255,255,0.02);
+      color:var(--muted);
+      padding:6px 8px;
+      border-radius:8px;
+      font-size:0.78rem;
+      border:1px solid rgba(255,255,255,0.02);
+    }
+
+    .cta {
+      background: linear-gradient(90deg, rgba(110,231,183,0.14), rgba(99,102,241,0.06));
+      color: #0b1220;
+      padding:8px 12px;
+      border-radius:10px;
+      font-weight:700;
+      text-decoration:none;
+      border: none;
+      cursor:pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .cta:active { transform: translateY(1px) scale(0.995); }
+
+    /* focus accessibility */
+    a.card-link, button.card-action {
+      display:block;
+      text-decoration:none;
+      color:inherit;
+      border:0;
+      background:none;
+      text-align:left;
+      padding:0;
+    }
+    a.card-link:focus-visible,
+    .card:focus-within { outline: 3px solid rgba(110,231,183,0.12); outline-offset:4px; }
+
+    /* small helper for tiny screens */
+    .grid .card + .card { margin-top:0; }
+
+    /* nice entrance when page loads */
+    .grid { opacity:0; transform: translateY(12px); transition: opacity 400ms ease, transform 500ms cubic-bezier(.2,.9,.2,1); }
+    .grid.ready { opacity:1; transform:none; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <div class="title">Components · Cards</div>
+        <h1>Responsive Card Grid</h1>
+      </div>
+      <div style="color:var(--muted);font-size:0.95rem">Pure HTML/CSS • Accessible • Animated</div>
+    </header>
+
+    <main>
+      <section class="grid" id="cardGrid" aria-label="Project cards">
+        <!-- Card 1 -->
+        <article class="card" aria-labelledby="c1-title">
+          <a href="#" class="card-link" tabindex="-1" aria-hidden="true">
+            <div class="media" aria-hidden="true">
+              <img src="https://images.unsplash.com/photo-1506765515384-028b60a970df?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=1" alt="">
+            </div>
+          </a>
+
+          <div class="card-content">
+            <span class="kicker">UI / Motion</span>
+            <h2 id="c1-title" class="card-title">Cinematic Landing Animation</h2>
+            <p class="card-desc">A hero card that uses layered parallax, subtle 3D tilt and staggered text reveals for an immersive entrance.</p>
+
+            <div class="meta">
+              <div class="tags" aria-hidden="true">
+                <span class="tag">GSAP</span>
+                <span class="tag">ScrollTrigger</span>
+              </div>
+              <button class="cta card-action" onclick="openCard(event,1)">View</button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 2 -->
+        <article class="card" aria-labelledby="c2-title">
+          <a href="#" class="card-link" tabindex="-1" aria-hidden="true">
+            <div class="media" aria-hidden="true">
+              <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=2" alt="">
+            </div>
+          </a>
+
+          <div class="card-content">
+            <span class="kicker">3D / WebGL</span>
+            <h2 id="c2-title" class="card-title">Interactive 3D Hero</h2>
+            <p class="card-desc">Lightweight Three.js example embedding 3D models with responsive fallbacks for mobile devices.</p>
+
+            <div class="meta">
+              <div class="tags" aria-hidden="true">
+                <span class="tag">Three.js</span>
+                <span class="tag">R3F</span>
+              </div>
+              <button class="cta card-action" onclick="openCard(event,2)">View</button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 3 -->
+        <article class="card" aria-labelledby="c3-title">
+          <a href="#" class="card-link" tabindex="-1" aria-hidden="true">
+            <div class="media" aria-hidden="true">
+              <img src="https://images.unsplash.com/photo-1504615755583-2916b52192f2?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=3" alt="">
+            </div>
+          </a>
+
+          <div class="card-content">
+            <span class="kicker">Micro UI</span>
+            <h2 id="c3-title" class="card-title">Lottie Micro-Interactions</h2>
+            <p class="card-desc">Vector-based Lottie animations for crisp, performant micro-interactions and icons across devices.</p>
+
+            <div class="meta">
+              <div class="tags" aria-hidden="true">
+                <span class="tag">Lottie</span>
+                <span class="tag">SVG</span>
+              </div>
+              <button class="cta card-action" onclick="openCard(event,3)">View</button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Add more cards as needed -->
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // small accessibility helper: let keyboard users "open" a card by focusing the card and pressing Enter
+    document.querySelectorAll('.card').forEach((card, idx) => {
+      card.tabIndex = 0;
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openCard(e, idx+1);
+        }
+      });
+    });
+
+    // demo open handler
+    function openCard(e, id){
+      // you can replace this with router navigation or modal code
+      alert('Open card #' + id + ' — replace with modal or route.');
+    }
+
+    // fade-in the grid after load for a pleasant entrance
+    window.addEventListener('load', () => {
+      requestAnimationFrame(() => document.getElementById('cardGrid').classList.add('ready'));
+    });
+  </script>
+</body>
+</html>
